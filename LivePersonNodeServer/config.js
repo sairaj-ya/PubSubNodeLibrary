@@ -114,7 +114,7 @@ let config = [
     {
       "region" : "local",
       "websocket" : {
-        "path": "ws://localhost:9092/socket.io"
+        "path": "wss://dev.msg.botcentralapi.com"
       },
       "redis": {
         "host" : "localhost",

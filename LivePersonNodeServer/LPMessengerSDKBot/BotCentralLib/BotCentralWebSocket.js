@@ -13,12 +13,12 @@ const CB_keywords = [
 const rq = RedisQueue.getRedisQueue();
 
 class BotCentralWebSocket {
-    constructor(environment) {
+    constructor(environment, cb) {
       this.converter = new MessageConverter();
       this.status = false;
       this.messageCache = {};
-      this.ws = this.initializeSocket(environment);
-      this.setOnBotResponse();
+      this.ws = this.initializeSocket(environment, cb);
+      //this.setOnBotResponse();
     }
 
     convertMessage(res, userType) {
@@ -29,10 +29,14 @@ class BotCentralWebSocket {
       return this.ws;
     }
 
-    initializeSocket(env) {
+    getSocketStatus(){
+      return this.status;
+    }
+
+    initializeSocket(env, cb) {
       let vm = this;
       let path = 'ws://localhost:9092';
-      logger.info('[botcentralWebsocket] bot environment : ', env);
+      logger.info(`[botcentralWebsocket] bot environment : ${env}`);
       if(env == 'dev') {
         path = 'wss://dev.msg.botcentralapi.com';
         logger.info('Connecting to dev socket server')
@@ -43,51 +47,69 @@ class BotCentralWebSocket {
         path = HostConfig['websocket']['path'];
         logger.info('[botcentralWebsocket] Connecting to prod socket server', path)
       }
-
-      var socket = io(path,
-        {
-          transports: ['websocket'],
-          rejectUnauthorized: false,
-          forceNode: true
+      try{
+        var socket = io(path,
+          {
+            transports: ['websocket'],
+            rejectUnauthorized: false,
+            forceNode: true
+          });
+        socket.on('connect', function(res){
+          logger.info('[botcentralWebsocket] botcentral server connect successful', res);
+          vm.status = true;
+          cb(null, true);
         });
-      socket.on('connect', function(res){
-        logger.info('[botcentralWebsocket] botcentral server connect successful', res);
-        this.status = true;
-      });
-      socket.on('connection', function(res){
-        logger.info('[botcentralWebsocket] botcentral server connection successful', res);
-        this.status = true;
-      });
+        socket.on('connection', function(res){
+          logger.info('[botcentralWebsocket] botcentral server connection successful', res);
+          vm.status = true;
+        });
 
-      socket.on('closed', data => {
-        logger.info('[botcentralWebsocket] botcentral server connection closed', data);
-        this.status = false;
-      });
+        socket.on('closed', data => {
+          logger.info('[botcentralWebsocket] botcentral server connection closed', data);
+          vm.status = false;
+        });
 
-      socket.on('error', (err) => {
-        logger.info('[botcentralWebsocket] botcentral server error', err);
-        this.status = false;
-        // vm.api.notifyError('BC_SOCKET', err.stack);
-      });
-      socket.on('connect_error', (error) => {
-        logger.info('[botcentralWebsocket] botcentral server connection error', error);
-        this.status = false;
-      });
+        socket.on('error', (err) => {
+          logger.info('[botcentralWebsocket] botcentral server error', err);
+          vm.status = false;
+          // vm.api.notifyError('BC_SOCKET', err.stack);
+        });
+        socket.on('connect_error', (error) => {
+          logger.info('[botcentralWebsocket] botcentral server connection error', error);
+          vm.status = false;
+        });
 
-      socket.on('reconnect_attempt', () => {
-        socket.io.opts.transports = ['websocket'];
-        logger.info('[botcentralWebsocket] botcentral server connection reconnect_attempt');
-      });
+        socket.on('reconnect_attempt', () => {
+          socket.io.opts.transports = ['websocket'];
+          logger.info('[botcentralWebsocket] botcentral server connection reconnect_attempt');
+        });
 
-      socket.on('disconnect', (reason) => {
-        logger.info('[botcentralWebsocket] botcentral server connection disconnect', reason);
-        this.status = false;
-      });
+        socket.on('disconnect', (reason) => {
+          logger.info('[botcentralWebsocket] botcentral server connection disconnect', reason);
+          vm.status = false;
+        });
 
-      socket.on('reconnecting', (attemptNumber) => {
-        logger.info('[botcentralWebsocket] botcentral server connection reconnecting', attemptNumber);
+        socket.on('reconnecting', (attemptNumber) => {
+          logger.info('[botcentralWebsocket] botcentral server connection reconnecting', attemptNumber);
+        });
+        return socket;
+      }catch(e){
+        cb(e, false);
+      }
+    }
+
+    closeSocketConnection(cb){
+      let vm = this;
+      this.ws.on('disconnect', reason => {
+        logger.info('[botcentralWebsocket] botcentral server connection disconnected', reason);
+        vm.status = false;
+        cb(null, true);
       });
-      return socket;
+      try{
+        this.getSocket().close();
+      }catch(e){
+        cb(e, false);
+      }
     }
 
     setOnBotResponse() {

@@ -16,7 +16,7 @@ const logger = winston.createLogger({
       },
     }),
     new (winston.transports.DailyRotateFile)({
-      filename: '/liveperson/data/cb/logs/'+process.env.APP_NAME.replace(/::/g,'_')+'-%DATE%',
+      filename: '/liveperson/data/cb/logs/testLogs-%DATE%',
       extension: '.json',
       datePattern: 'YYYY-MM-DD',
       timestamp: function() {

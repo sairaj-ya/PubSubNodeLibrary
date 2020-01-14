@@ -1,20 +1,46 @@
 const BCAgent = require('./BotCentralWebSocket');
 const ms = require('../BotCentralLib/ConversationDataStore').getConversationDataStore();
+const messagingUtil = require('../src/LPMessagingUtil');
+const logger = require('./BotCentralLogging');
 
 class CBMessageWrapper{
     constructor() {
     }
-    init(environment, botId, botMessageEventHandler, cb) {
+    init(environment, cb) {
         try{
-            this.bc = new BCAgent(environment);
-            this.botMessageHandler = botMessageEventHandler;
-            this.registerBCCallbacks();
-            cb(null, true);
+            this.bc = new BCAgent(environment, cb);
+            //this.botMessageHandler = botMessageEventHandler;
+            //this.registerBCCallbacks();
         }catch(e) {
             logger.error('[CBMessageWrapper Initialization Exception]', e);
             cb(e, false);
         }
     }
+
+    stop(cb){
+        try{
+            this.bc.closeSocketConnection(cb);
+        }catch(e) {
+            logger.error('[CBMessageWrapper Stop Exception]', e);
+            cb(e, false);
+        }
+    }
+
+    getStatus(){
+        return this.bc.getSocketStatus();
+    }
+
+    subscribeCallBacks(botMessageEventHandler, cb){
+        try{
+            this.botMessageHandler = botMessageEventHandler;
+            this.registerBCCallbacks();
+            cb(null, true);
+        }catch(e) {
+            logger.error('[CBMessageWrapper Subscribe Callback Exception]', e);
+            cb(e, false);
+        }
+    }
+
     registerBCCallbacks() {
         /**
          * Register callbacks for Botcentral websocket
@@ -84,10 +110,10 @@ class CBMessageWrapper{
             type, content, message, quickReplies, meta
           } = lpObj;
     
-          if(type == 'luis') {
-            this._sendLuisData(dialogId, content);
-            return;
-          }
+        //   if(type == 'luis') {
+        //     this._sendLuisData(dialogId, content);
+        //     return;
+        //   }
           let eventObj = evUtil.getEvent(dialogId, lpObj);
           ms.addBCMessage(consumerId, lpObj);
           if(eventObj) {
@@ -103,8 +129,8 @@ class CBMessageWrapper{
     }
 
     sendToConversationBuilder(messageItem, botId) {
-        let { originatorId, dialogId, message } = lastItem;
-        ms.addLPMessage(originatorId, lastItem);
+        let { originatorId, dialogId, message } = messageItem;
+        ms.addLPMessage(originatorId, messageItem);
     
         if(typeof message === 'string' || message instanceof String) {
           if(message == '__APPLEPAY_SUCCESS__'
@@ -113,8 +139,8 @@ class CBMessageWrapper{
             // user entered __APPLEPAY_SUCCESS__ or system keyword, ignore...
             return;
           }
-          if(lastItem.metadata) {
-            let meta = lastItem.metadata.filter((item)=> item.type === 'ConnectorPaymentResponse');
+          if(messageItem.metadata) {
+            let meta = messageItem.metadata.filter((item)=> item.type === 'ConnectorPaymentResponse');
             if(meta.length === 1) {
               message = '__APPLEPAY_SUCCESS__';
               if(meta[0].status === false) {
@@ -123,7 +149,7 @@ class CBMessageWrapper{
             }
           }
           logger.info(`[contentEvent][dialogId:${dialogId}][consumerId:${originatorId}]: Message: ${message==undefined || message==null || message.trim()==''? '':message.substring(0, Math.min(AgentConfig.maskedMessageLength, message.length))}`);  //: ${message}`) /* Commented to align with security constraints */
-          this._processAndSendMessage(dialogId, message, lastItem.sequence, botId);
+          this._processAndSendMessage(dialogId, message, messageItem.sequence, botId);
         } else {
             logger.info(`[contentEvent][dialogId:${dialogId}][consumerId:${originatorId}]: [Not Supported type For Bot Survey]`);
         }
@@ -135,6 +161,58 @@ class CBMessageWrapper{
         let consumerId = meta['consumerId'];
         meta['mid'] = `${dialogId}-${sequence}`;
         this.bc.sendMessage(message.join(' '), botId, meta);
+    }
+
+    isStepUp(c) {
+        let dialogId = c.result.convId;
+        if(!ms.containDialogId(dialogId)) {
+          return false;
+        }
+        const newConsumerId = c.result.conversationDetails.participants.filter(p => p.role === "CONSUMER")[0].id;
+        let metaObj = ms.getMetaObjectFromDialogId(dialogId);
+        let newMeta = metaObj['consumerId'].split(":::");
+        if (metaObj['consumerId'] == newConsumerId || (newMeta.length>1 && newMeta[1] === newConsumerId)) {
+          return false;
+        }
+        return true;
+    }
+
+    onUserConnected(dialogId, change, cb) {
+        try{
+            if (change.type === 'UPSERT' && (!ms.containDialogId(dialogId) || this.isStepUp(change))) {
+                let stepUpOccured = false;
+                if(this.isStepUp(change)) {
+                    stepUpOccured = true;
+                }
+                logger.info(`[onUserConnected][dialogId: ${dialogId}]`, change);
+                ms.addToMetaStore(dialogId, {});
+                const consumerId = change.result.conversationDetails.participants.filter(p => p.role === "CONSUMER")[0].id;
+                if (consumerId) {
+                    this.setConversationDetails(dialogId, change.result.conversationDetails);
+                }
+            }else if (change.type === 'DELETE') {
+                logger.info(`[onUserConnected][DELETE][dialogId:${dialogId}]`);
+                // conversation was closed or transferred
+                ms.removeFromMetaStore(dialogId);
+            }
+            cb(null, true);
+        }catch(e){
+            cb(e, null);
+        }
+    }
+    setConversationDetails(dialogId, convDetails) {
+        if(convDetails && convDetails.context) {
+          let contextType = convDetails.context.type;
+          if(convDetails.context.name && (convDetails.context.name == "RCS Business Messaging" || convDetails.context.name.toLowerCase().includes("rcs"))) {
+            contextType = 'grbmIncoming';
+          }
+          ms.updateKey(dialogId, 'userType', contextType);
+          let chatInfo = ms.getByKey(dialogId, 'lpChatInfo');
+          if(!chatInfo) {
+            chatInfo = messagingUtil.getChatInfo(convDetails);
+            ms.updateKey(dialogId, 'lpChatInfo', chatInfo);
+          }
+        }
     }
 }
 module.exports = CBMessageWrapper;

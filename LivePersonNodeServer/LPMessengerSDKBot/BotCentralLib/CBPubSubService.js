@@ -23,6 +23,22 @@ class CBPubSubService {
         }
     }
 
+    registerDialogueToConversationBuilder(dialogId, change, cb){
+        try {
+            convBuilder.onUserConnected(dialogId, change, (err, isRegisterSuccess) => {
+                if(err) {
+                    logger.error(`[ConversationBuilder Register Dialogue Exception]`,err);
+                    cb(err, null);
+                    return;
+                }    
+                cb(null, isRegisterSuccess);
+            })
+        }catch(e) {
+            logger.error('[ConversationBuilder Register Dialogue implementation Exception]', e);
+            cb(e, null);
+        }
+    }
+
     //call this method to get  botId corresponding to a skillId.
     // @skillID - skill ID.
     // returns the botID 
@@ -48,7 +64,7 @@ class CBPubSubService {
     // Sends true if the subscribe is successful
     // Sends false if subscribe failed
     // error is not null, if there is any exception in the process.
-    subscribeToConversationBuilder(environment, botId, botMessageEventHandler, cb){
+    subscribeToConversationBuilder(botMessageEventHandler, cb){
         try{
             convBuilder.init(environment, botId, botMessageEventHandler, (err, isSubscribeSuccess) => {
                 if(err) {
@@ -62,6 +78,44 @@ class CBPubSubService {
             logger.error('[ConversationBuilder Subscribe implementation Exception]', e);
             cb(e, null);
         }
+    }
+
+    startCBConnection(environment, cb){
+        try{
+            convBuilder.init(environment, (err, isStartSuccess) => {
+                if(err) {
+                    logger.error(`[ConversationBuilder connection Start Exception]`,err);
+                    cb(err, null);
+                    return;
+                }
+                logger.info(`[ConversationBuilder connection Start Successful]`);
+                cb(null, isStartSuccess);
+            })
+        }catch(e) {
+            logger.error('[ConversationBuilder connection Start Exception]', e);
+            cb(e, null);
+        }
+    }
+
+    stopCBConnection(cb){
+        try{
+            convBuilder.stop((err, isStopSuccess) => {
+                if(err) {
+                    logger.error(`[ConversationBuilder connection Stop Exception]`,err);
+                    cb(err, null);
+                    return;
+                }
+                logger.info(`[ConversationBuilder connection Stop Successful]`);
+                cb(null, isStopSuccess);
+            })
+        }catch(e) {
+            logger.error('[ConversationBuilder connection Stop implementation Exception]', e);
+            cb(e, null);
+        }
+    }
+
+    cbConnectionStatus(){
+        return convBuilder.getStatus();
     }
 }
 

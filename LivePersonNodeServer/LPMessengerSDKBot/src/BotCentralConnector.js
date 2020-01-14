@@ -211,6 +211,8 @@ class LPAgent extends Agent {
   onUserConnected(cb) {
     // Notification on changes in the open consversation list
     this.on('cqm.ExConversationChangeNotification', notificationBody => {
+      logger.info(`on user connected`);
+      logger.info(`${JSON.stringify(notificationBody)}`);
       notificationBody.changes.forEach(change => {
         let dialogId = change.result.convId;
         let stepUpOccured = false;
