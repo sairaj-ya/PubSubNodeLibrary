@@ -1,0 +1,40 @@
+lpUserInfoList =[{
+    "type": "ctmrinfo",
+    "info": {
+        "customerId": "lpTestsai12as123"
+    },
+    "acr": "loa1",
+    "iss": "https://customerWebSite.com"
+}, {
+    "type": "personal",
+    "personal": {
+        "firstname": "sai12as123"
+    },
+    "acr": "loa1",
+    "iss": "https://customerWebSite.com"
+}, {
+    "type": "ctmrinfo",
+    "info": {
+        "customerId": "lpTestsai12as123"
+    },
+    "auth": {}
+}, {
+    "type": "personal",
+    "personal": {
+        "firstname": "sai12as123"
+    },
+    "auth": {}
+}, {
+    "type": "ctmrinfo",
+    "info": {
+        "imei": "null"
+    }
+}, {
+    "type": "personal",
+    "personal": {
+        "firstname": "sai12as123",
+        "contacts": [{
+            "phone": "null"
+        }]
+    }
+}];

@@ -1,16 +1,9 @@
-const logger = require('./BotCentralLogging');
 const io = require('socket.io-client');
-
-const RedisQueue = require('./RedisQueue')
 const MessageConverter = require('./MessageConverter')
-const HostConfig = require('../config/HostConfig');
 const AgentConfig = require('../config/AgentConfig');
-
 const CB_keywords = [
   'freset', 'reset', '__agent_escalation_failed__', '__image_received__'
 ]
-
-const rq = RedisQueue.getRedisQueue();
 
 class BotCentralWebSocket {
     constructor(environment, cb) {
@@ -18,7 +11,6 @@ class BotCentralWebSocket {
       this.status = false;
       this.messageCache = {};
       this.ws = this.initializeSocket(environment, cb);
-      //this.setOnBotResponse();
     }
 
     convertMessage(res, userType) {
@@ -35,18 +27,9 @@ class BotCentralWebSocket {
 
     initializeSocket(env, cb) {
       let vm = this;
-      let path = 'ws://localhost:9092';
-      logger.info(`[botcentralWebsocket] bot environment : ${env}`);
-      if(env == 'dev') {
-        path = 'wss://dev.msg.botcentralapi.com';
-        logger.info('Connecting to dev socket server')
-      } else if (env == 'local') {
-        logger.info('Connecting to local socket server')
-        path = 'ws://localhost:9092/';
-      } else {
-        path = HostConfig['websocket']['path'];
-        logger.info('[botcentralWebsocket] Connecting to prod socket server', path)
-      }
+      let path = AgentConfig['websocket'][env];
+      console.log(`[botcentralWebsocket] bot environment : ${env}`);
+      console.log('[botcentralWebsocket] Connecting to socket server', path)
       try{
         var socket = io(path,
           {
@@ -55,42 +38,43 @@ class BotCentralWebSocket {
             forceNode: true
           });
         socket.on('connect', function(res){
-          logger.info('[botcentralWebsocket] botcentral server connect successful', res);
+          console.log('[botcentralWebsocket] botcentral server connect successful', res);
           vm.status = true;
+          vm.setOnBotResponse()
           cb(null, true);
         });
         socket.on('connection', function(res){
-          logger.info('[botcentralWebsocket] botcentral server connection successful', res);
+          console.log('[botcentralWebsocket] botcentral server connection successful', res);
           vm.status = true;
         });
 
         socket.on('closed', data => {
-          logger.info('[botcentralWebsocket] botcentral server connection closed', data);
+          console.log('[botcentralWebsocket] botcentral server connection closed', data);
           vm.status = false;
         });
 
         socket.on('error', (err) => {
-          logger.info('[botcentralWebsocket] botcentral server error', err);
+          console.log('[botcentralWebsocket] botcentral server error', err);
           vm.status = false;
           // vm.api.notifyError('BC_SOCKET', err.stack);
         });
         socket.on('connect_error', (error) => {
-          logger.info('[botcentralWebsocket] botcentral server connection error', error);
+          console.log('[botcentralWebsocket] botcentral server connection error', error);
           vm.status = false;
         });
 
         socket.on('reconnect_attempt', () => {
           socket.io.opts.transports = ['websocket'];
-          logger.info('[botcentralWebsocket] botcentral server connection reconnect_attempt');
+          console.log('[botcentralWebsocket] botcentral server connection reconnect_attempt');
         });
 
         socket.on('disconnect', (reason) => {
-          logger.info('[botcentralWebsocket] botcentral server connection disconnect', reason);
+          console.log('[botcentralWebsocket] botcentral server connection disconnect', reason);
           vm.status = false;
         });
 
         socket.on('reconnecting', (attemptNumber) => {
-          logger.info('[botcentralWebsocket] botcentral server connection reconnecting', attemptNumber);
+          console.log('[botcentralWebsocket] botcentral server connection reconnecting', attemptNumber);
         });
         return socket;
       }catch(e){
@@ -101,7 +85,7 @@ class BotCentralWebSocket {
     closeSocketConnection(cb){
       let vm = this;
       this.ws.on('disconnect', reason => {
-        logger.info('[botcentralWebsocket] botcentral server connection disconnected', reason);
+        console.log('[botcentralWebsocket] botcentral server connection disconnected', reason);
         vm.status = false;
         cb(null, true);
       });
@@ -131,9 +115,8 @@ class BotCentralWebSocket {
         }
         return;
       }
-      logger.info(`[botresponse][consumerId:${recipient_id}] ${JSON.stringify(res)}`);
+      console.log(`[botresponse][consumerId:${recipient_id}] ${JSON.stringify(res)}`);
       vm.removeFromMessageCache(recipient_id);
-      rq.updateLastBCMessageTimestamp();
       if(res.message && res.message.text
         && res.message.text.split('\n')[0] == AgentConfig.defaultMsg.defaultCloseConversationMessage) {
         vm.onEndConversation(res);
@@ -150,7 +133,7 @@ class BotCentralWebSocket {
       if(res.message.text != AgentConfig.defaultMsg.defaultEmptyMessage) {
           vm.onMessage(res);
       } else {
-        logger.info(`[botresponse][_ignore_message_][${recipient_id}]`, res.message.text)
+        console.log(`[botresponse][_ignore_message_][${recipient_id}]`, res.message.text)
       }
 
       // escalate the chat
@@ -169,32 +152,31 @@ class BotCentralWebSocket {
         if(fileInfo.caption!=undefined && fileInfo.caption!=null && fileInfo.caption!='')
           clonedMsgObj.entry[0].messaging[0].message.fileInfo.caption = fileInfo.caption.substring(0, Math.min(AgentConfig.maskedMessageLength, fileInfo.caption.length));
       }
-      logger.info(`${JSON.stringify(clonedMsgObj)}`);
+      console.log(`${JSON.stringify(clonedMsgObj)}`);
     }
 
     sendMessage(message, botId, userMeta, count = 1) {
       if(!userMeta) {
-        logger.warn('[userMessage] userMeta not found!')
+        console.log('[userMessage] userMeta not found!')
         return
       }
         let mid = userMeta['mid'];
 
         let conversationId = userMeta['dialogId'];
-        let botId = AgentConfig.botId;
       if(count > AgentConfig.misc.messageResendMaxRetries) {
         if(!userMeta.consumerId.toUpperCase().startsWith('MANAGER')){
-          logger.info(`${JSON.stringify(userMeta)}`);
-          logger.error(`[MESSAGE_RESEND_EXCEED_MAX_RETRIES][count: ${count}] Stuck_conversation botId:${botId} conversationId:${conversationId} msgId:${mid}`); 
+          console.log(`${JSON.stringify(userMeta)}`);
+          console.log(`[MESSAGE_RESEND_EXCEED_MAX_RETRIES][count: ${count}] Stuck_conversation botId:${botId} conversationId:${conversationId} msgId:${mid}`); 
           //, Message: ${JSON.stringify(message)}]`);/* Commenting the message for security reasons */
-          //logger.error(`Stuck_conversation botId:${botId} conversationId:${conversationId} msgId:${mid}`);
+          //console.log(`Stuck_conversation botId:${botId} conversationId:${conversationId} msgId:${mid}`);
         }
         return;
       }
 
-      // logger.error(`Stuck_conversation botId:${botId} conversationId:${conversationId} msgId:${mid}`);
+      // console.log(`Stuck_conversation botId:${botId} conversationId:${conversationId} msgId:${mid}`);
       try {
         var msgObj = this.converter.convertToBCMessage(message, botId, userMeta);
-        logger.info(`[userMessage][consumerId: ${userMeta.consumerId}][count: ${count}]`);
+        console.log(`[userMessage][consumerId: ${userMeta.consumerId}][count: ${count}]`);
         this.logMaskedMsgObj(msgObj);
         this.ws.emit('usermessage', msgObj);
 
@@ -202,7 +184,7 @@ class BotCentralWebSocket {
             this.addToMessageCache(message, botId, userMeta, count);
         }
       } catch(e) {
-        logger.error(`[userMessage][consumerId: ${userMeta.consumerId}]`,e)
+        console.log(`[userMessage][consumerId: ${userMeta.consumerId}]`,e)
       }
     }
 

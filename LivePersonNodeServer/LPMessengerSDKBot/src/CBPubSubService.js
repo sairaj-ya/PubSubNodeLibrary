@@ -1,5 +1,4 @@
-const logger = require('./BotCentralLogging');
-const convBuilderWrapper = require('./CBMessageWrapper');
+const convBuilderWrapper = require('../BotCentralLib/CBMessageWrapper');
 
 const convBuilder = new convBuilderWrapper();
 class CBPubSubService {
@@ -12,29 +11,29 @@ class CBPubSubService {
     // Sends true if no exception while sending the data to Conversation Builder
     // Sends false if there is any exception in publish
     // error is not null, if there is any exception in the process.
-    publishToConversationBuilder(messageItem, botId, cb) {
+    publishToConversationBuilder(messageItem, botId, agentInfo, cb) {
         //implementation of publish to CB.
         try {
-            convBuilder.sendToConversationBuilder(messageItem, botId);
+            convBuilder.sendToConversationBuilder(messageItem, botId, agentInfo);
             cb(null, true);
         }catch(e) {
-            logger.error('[ConversationBuilder Publish Event implementation Exception]', e);
+            console.log('[ConversationBuilder Publish Event implementation Exception]', e);
             cb(e, null);
         }
     }
 
-    registerDialogueToConversationBuilder(dialogId, change, cb){
+    registerDialogueToConversationBuilder(dialogId, change, lpUserInfoListObj, cb){
         try {
-            convBuilder.onUserConnected(dialogId, change, (err, isRegisterSuccess) => {
+            convBuilder.onUserConnected(dialogId, change, lpUserInfoListObj, (err, isRegisterSuccess) => {
                 if(err) {
-                    logger.error(`[ConversationBuilder Register Dialogue Exception]`,err);
+                    console.log(`[ConversationBuilder Register Dialogue Exception]`,err);
                     cb(err, null);
                     return;
                 }    
                 cb(null, isRegisterSuccess);
             })
         }catch(e) {
-            logger.error('[ConversationBuilder Register Dialogue implementation Exception]', e);
+            console.log('[ConversationBuilder Register Dialogue implementation Exception]', e);
             cb(e, null);
         }
     }
@@ -66,16 +65,16 @@ class CBPubSubService {
     // error is not null, if there is any exception in the process.
     subscribeToConversationBuilder(botMessageEventHandler, cb){
         try{
-            convBuilder.init(environment, botId, botMessageEventHandler, (err, isSubscribeSuccess) => {
+            convBuilder.subscribeCallBacks(botMessageEventHandler, (err, isSubscribeSuccess) => {
                 if(err) {
-                    logger.error(`[ConversationBuilder Subscribe Exception]`,err);
+                    console.log(`[ConversationBuilder Subscribe Exception]`,err);
                     cb(err, null);
                     return;
                 }    
                 cb(null, isSubscribeSuccess);
             })
         }catch(e) {
-            logger.error('[ConversationBuilder Subscribe implementation Exception]', e);
+            console.log('[ConversationBuilder Subscribe implementation Exception]', e);
             cb(e, null);
         }
     }
@@ -84,15 +83,15 @@ class CBPubSubService {
         try{
             convBuilder.init(environment, (err, isStartSuccess) => {
                 if(err) {
-                    logger.error(`[ConversationBuilder connection Start Exception]`,err);
+                    console.log(`[ConversationBuilder connection Start Exception]`,err);
                     cb(err, null);
                     return;
                 }
-                logger.info(`[ConversationBuilder connection Start Successful]`);
+                console.log(`[ConversationBuilder connection Start Successful]`);
                 cb(null, isStartSuccess);
             })
         }catch(e) {
-            logger.error('[ConversationBuilder connection Start Exception]', e);
+            console.log('[ConversationBuilder connection Start Exception]', e);
             cb(e, null);
         }
     }
@@ -101,15 +100,15 @@ class CBPubSubService {
         try{
             convBuilder.stop((err, isStopSuccess) => {
                 if(err) {
-                    logger.error(`[ConversationBuilder connection Stop Exception]`,err);
+                    console.log(`[ConversationBuilder connection Stop Exception]`,err);
                     cb(err, null);
                     return;
                 }
-                logger.info(`[ConversationBuilder connection Stop Successful]`);
+                console.log(`[ConversationBuilder connection Stop Successful]`);
                 cb(null, isStopSuccess);
             })
         }catch(e) {
-            logger.error('[ConversationBuilder connection Stop implementation Exception]', e);
+            console.log('[ConversationBuilder connection Stop implementation Exception]', e);
             cb(e, null);
         }
     }

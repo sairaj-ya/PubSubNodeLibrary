@@ -1,4 +1,3 @@
-const logger = require('./BotCentralLogging');
 var uuidV4 = require('uuid/v4');
 
 const AgentConfig = require('../config/AgentConfig');
@@ -149,10 +148,10 @@ class MessageConverter {
         }
 
         if(message.attachment.type === 'audio') {
-          logger.info('__unsupported format__: audio');
+          console.log('__unsupported format__: audio');
         }
         if(message.attachment.type === 'video') {
-          logger.info('__unsupported format__: video');
+          console.log('__unsupported format__: video');
         }
       }
     } catch(e) {
@@ -215,7 +214,7 @@ class MessageConverter {
         }
       }
     } catch(e) {
-      logger.error('[convertToLPMessage][exception]', e)
+      console.log('[convertToLPMessage][exception]', e)
     }
     return {};
   }
@@ -259,7 +258,7 @@ class MessageConverter {
         }
       }
     } catch(e) {
-      logger.error('[convertToLPMessage][exception]', e)
+      console.log('[convertToLPMessage][exception]', e)
     }
     return {};
   }
@@ -298,7 +297,7 @@ class MessageConverter {
         }
       }
     } catch(e) {
-      logger.error('[convertToLPMessage][exception]', e)
+      console.log('[convertToLPMessage][exception]', e)
     }
     return {};
   }
@@ -342,7 +341,7 @@ class MessageConverter {
         }
       }
     } catch(e) {
-      logger.error('[convertToLPMessage][exception]', e)
+      console.log('[convertToLPMessage][exception]', e)
     }
     return {};
   }

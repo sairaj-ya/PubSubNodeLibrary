@@ -1,7 +1,8 @@
 const BCAgent = require('./BotCentralWebSocket');
 const ms = require('../BotCentralLib/ConversationDataStore').getConversationDataStore();
-const messagingUtil = require('../src/LPMessagingUtil');
-const logger = require('./BotCentralLogging');
+const messagingUtil = require('./LPMessagingUtil');
+const evUtil = require('./eventHelper');
+const leEvents = require('./LiveEngageEvents');
 
 class CBMessageWrapper{
     constructor() {
@@ -12,7 +13,7 @@ class CBMessageWrapper{
             //this.botMessageHandler = botMessageEventHandler;
             //this.registerBCCallbacks();
         }catch(e) {
-            logger.error('[CBMessageWrapper Initialization Exception]', e);
+            console.log('[CBMessageWrapper Initialization Exception]', e);
             cb(e, false);
         }
     }
@@ -21,7 +22,7 @@ class CBMessageWrapper{
         try{
             this.bc.closeSocketConnection(cb);
         }catch(e) {
-            logger.error('[CBMessageWrapper Stop Exception]', e);
+            console.log('[CBMessageWrapper Stop Exception]', e);
             cb(e, false);
         }
     }
@@ -36,7 +37,7 @@ class CBMessageWrapper{
             this.registerBCCallbacks();
             cb(null, true);
         }catch(e) {
-            logger.error('[CBMessageWrapper Subscribe Callback Exception]', e);
+            console.log('[CBMessageWrapper Subscribe Callback Exception]', e);
             cb(e, false);
         }
     }
@@ -55,14 +56,7 @@ class CBMessageWrapper{
     onEndConversation(res) {
         let meta = ms.getMetaObjectFromConsumerId(res.recipient.id);
         if(!meta) {return;}
-        this.botMessageHandler(evUtil.getEndConvEvent(meta['dialogId']), "EndConversationEvent", (e,res) => {
-          if(e) {
-            logger.error(LOG_HEADER('onEndConversation',meta), e);
-          } else {
-            logger.info(LOG_HEADER('onEndConversation',meta), res);
-            //this.bc.sendResetMsg(meta);
-          }
-        });
+        this.botMessageHandler(evUtil.getEndConvEvent(meta['dialogId']), leEvents.endConversation);
     }
     
     onCloseDialog(res) {
@@ -70,15 +64,8 @@ class CBMessageWrapper{
         if(!meta) {return;}
         let reason = 'random reason';
         let closeDialogObj = evUtil.getCloseDialogEvent(meta['dialogId'], reason)
-        this.botMessageHandler(evUtil.getEndConvEvent(meta['dialogId']), "CloseConversationEvent", (e,res) => {
-          if(e) {
-            logger.error(LOG_HEADER('onCloseDialog', meta), e, JSON.stringify(closeDialogObj), res)
-          } else {
-            logger.info(LOG_HEADER('onCloseDialog', meta), res);
-            //this.bc.sendResetMsg(meta);
-          }
-        });
-      }
+        this.botMessageHandler(evUtil.getEndConvEvent(meta['dialogId']), leEvents.closeConversation);
+      }  
 
     onTypingEvent(res) {
         let meta = ms.getMetaObjectFromConsumerId(res.recipient.id);
@@ -87,14 +74,7 @@ class CBMessageWrapper{
         if(res.sender_action == 'typing_on')  { state = 'COMPOSING' }
         else if(res.sender_action == 'typing_off') { state = 'PAUSE' }
         else { return; }
-        this.publishEvent(evUtil.getTypingEvent(meta['dialogId'], state));
-        this.botMessageHandler(evUtil.getTypingEvent(meta['dialogId'], state), "PublishEvent", (e, res) => {
-            if(e) {
-                logger.info(`[BotStudio bot Message Handler][onTyping][Event type: PublishEvent][type: ${type}][dialogId: ${dialogId}][consumerId: ${consumerId}][LP_logger.error]`);
-            } else {
-                logger.info(`[BotStudio bot Message Handler][onTyping][Event type: PublishEvent][type: ${type}][dialogId: ${dialogId}][consumerId: ${consumerId}]`, JSON.stringify(eventObj), res);
-            }
-        });
+        this.botMessageHandler(evUtil.getTypingEvent(meta['dialogId'], state), leEvents.publish);
       }
 
     sendMessageToLP(res){
@@ -117,25 +97,19 @@ class CBMessageWrapper{
           let eventObj = evUtil.getEvent(dialogId, lpObj);
           ms.addBCMessage(consumerId, lpObj);
           if(eventObj) {
-            this.botMessageHandler(eventObj, "PublishEvent", (e, res) => {
-                if(e) {
-                  logger.info(`[BotStudio bot Message Handler][Send Message][Event type: PublishEvent][type: ${type}][dialogId: ${dialogId}][consumerId: ${consumerId}][LP_logger.error]`, JSON.stringify(eventObj), e);
-                } else {
-                  logger.info(`[BotStudio bot Message Handler][Send Message][Event type: PublishEvent][type: ${type}][dialogId: ${dialogId}][consumerId: ${consumerId}]`, JSON.stringify(eventObj), res);
-                }
-            });
+            this.botMessageHandler(eventObj, leEvents.publish);
           }
         }
     }
 
-    sendToConversationBuilder(messageItem, botId) {
+    sendToConversationBuilder(messageItem, botId, agentInfo) {
         let { originatorId, dialogId, message } = messageItem;
         ms.addLPMessage(originatorId, messageItem);
     
         if(typeof message === 'string' || message instanceof String) {
           if(message == '__APPLEPAY_SUCCESS__'
           || message == '__APPLEPAY_FAILURE__'
-          || message == AgentConfig.defaultMsg.defaultStepupMessage) {
+          || message == '_STEPUP_') {
             // user entered __APPLEPAY_SUCCESS__ or system keyword, ignore...
             return;
           }
@@ -148,19 +122,26 @@ class CBMessageWrapper{
               }
             }
           }
-          logger.info(`[contentEvent][dialogId:${dialogId}][consumerId:${originatorId}]: Message: ${message==undefined || message==null || message.trim()==''? '':message.substring(0, Math.min(AgentConfig.maskedMessageLength, message.length))}`);  //: ${message}`) /* Commented to align with security constraints */
-          this._processAndSendMessage(dialogId, message, messageItem.sequence, botId);
+          console.log(`[contentEvent][dialogId:${dialogId}][consumerId:${originatorId}]: Message: ${message==undefined || message==null || message.trim()==''? '':message.substring(0, Math.min(4, message.length))}`);
+          this._processAndSendMessageToCB(dialogId, message, messageItem.sequence, botId, agentInfo);
         } else {
-            logger.info(`[contentEvent][dialogId:${dialogId}][consumerId:${originatorId}]: [Not Supported type For Bot Survey]`);
+          console.log(`[contentEvent][dialogId:${dialogId}][consumerId:${originatorId}]: [Not Supported type For Bot Survey]`);
         }
     }
 
-    _processAndSendMessageToCB(dialogId, message, sequence, botId) {
+    _processAndSendMessageToCB(dialogId, message, sequence, botId, agentInfo) {
         let meta = ms.getMetaObjectFromDialogId(dialogId);
         if(!meta) {return;}
         let consumerId = meta['consumerId'];
         meta['mid'] = `${dialogId}-${sequence}`;
-        this.bc.sendMessage(message.join(' '), botId, meta);
+        if(!meta.lpChatInfo.conversationType)
+          meta.lpChatInfo.conversationType = "messaging";
+        if(!meta.agentInfo || !meta.agentInfo.accountId || !meta.agentInfo.accountUser){
+          meta.agentInfo = {};
+          meta.agentInfo.accountId = !agentInfo || !agentInfo.accountId ? null : agentInfo.accountId;
+          meta.agentInfo.accountUser = !agentInfo || !agentInfo.accountUser ? null : agentInfo.accountUser;
+        }
+        this.bc.sendMessage(message, botId, meta);
     }
 
     isStepUp(c) {
@@ -168,6 +149,7 @@ class CBMessageWrapper{
         if(!ms.containDialogId(dialogId)) {
           return false;
         }
+
         const newConsumerId = c.result.conversationDetails.participants.filter(p => p.role === "CONSUMER")[0].id;
         let metaObj = ms.getMetaObjectFromDialogId(dialogId);
         let newMeta = metaObj['consumerId'].split(":::");
@@ -177,21 +159,32 @@ class CBMessageWrapper{
         return true;
     }
 
-    onUserConnected(dialogId, change, cb) {
+    onUserConnected(dialogId, change, lpUserInfoListObj, cb) {
         try{
             if (change.type === 'UPSERT' && (!ms.containDialogId(dialogId) || this.isStepUp(change))) {
                 let stepUpOccured = false;
                 if(this.isStepUp(change)) {
                     stepUpOccured = true;
                 }
-                logger.info(`[onUserConnected][dialogId: ${dialogId}]`, change);
+                console.log(`[onUserConnected][dialogId: ${dialogId}]`, change);
                 ms.addToMetaStore(dialogId, {});
                 const consumerId = change.result.conversationDetails.participants.filter(p => p.role === "CONSUMER")[0].id;
                 if (consumerId) {
                     this.setConversationDetails(dialogId, change.result.conversationDetails);
+                    change.result.conversationDetails.participants.forEach(p => {
+                      if (p.role === 'CONSUMER') {
+                        let userId = p.id;
+                        ms.addUserToDialogPair(userId, dialogId);
+                        ms.updateKey(dialogId, 'consumerId', userId);
+                        console.log(`[onUserConnected][ACCEPTED][dialogId:${dialogId}][consumerId::${userId}]`);
+                        if(lpUserInfoListObj==null)
+                          lpUserInfoListObj = [];
+                        ms.updateKey(dialogId, 'lpUserInfoList', lpUserInfoListObj);
+                      }
+                    });
                 }
             }else if (change.type === 'DELETE') {
-                logger.info(`[onUserConnected][DELETE][dialogId:${dialogId}]`);
+                console.log(`[onUserConnected][DELETE][dialogId:${dialogId}]`);
                 // conversation was closed or transferred
                 ms.removeFromMetaStore(dialogId);
             }

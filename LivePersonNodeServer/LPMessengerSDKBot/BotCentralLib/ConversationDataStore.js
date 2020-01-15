@@ -1,6 +1,3 @@
-const logger = require('./BotCentralLogging');
-const AgentConfig = require('../config/AgentConfig');
-
 const MAX_NUM_MESSAGE_IN_CACHE = 5;
 
 class ConversationDataStore {
@@ -98,7 +95,7 @@ class ConversationDataStore {
     if(meta) {
       return this._botcentralMetaWrapper(dialogId, meta)
     } else {
-      logger.warn(`[getMetaObjectFromConsumerId][consumerId:${consumerId}] dialogId does not exist`)
+      console.log(`[getMetaObjectFromConsumerId][consumerId:${consumerId}] dialogId does not exist`)
       return null
     }
   }
@@ -112,7 +109,7 @@ class ConversationDataStore {
     if(meta) {
       return this._botcentralMetaWrapper(dialogId, meta)
     } else {
-      logger.warn(`[getMetaObjectFromDialogId][dialogId:${dialogId}] consumerId does not exist`)
+      console.log(`[getMetaObjectFromDialogId][dialogId:${dialogId}] consumerId does not exist`)
       return null
     }
   }
@@ -132,11 +129,7 @@ class ConversationDataStore {
       'userType': meta.userType,
       'dialogId': dialogId,
       'lpUserInfoList' : meta.lpUserInfoList,
-      'lpChatInfo' : {...meta.lpChatInfo, 'conversationType' : AgentConfig.appType},
-      'agentInfo': {
-        accountId : AgentConfig.accountId,
-        accountUser: this.agentId ? this.agentId : AgentConfig.username //AgentConfig.username
-      }
+      'lpChatInfo' : {...meta.lpChatInfo}
     }
   }
 }
