@@ -1,6 +1,6 @@
 var uuidV4 = require('uuid/v4');
 
-const AgentConfig = require('../config/AgentConfig');
+const AgentConfig = require('./config/AgentConfig');
 
 const tr = require('./Transformer');
 

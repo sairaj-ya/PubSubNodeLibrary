@@ -2,8 +2,8 @@ const request = require('request');
 const logger = require('../BotCentralLogging');
 const rq = require('../RedisQueue').getRedisQueue();
 
-const HostConfig = require('../../config/HostConfig');
-const AgentConfig = require('../../config/AgentConfig');
+const HostConfig = require('../config/HostConfig');
+const AgentConfig = require('../config/AgentConfig');
 
 
 class HTTPConnector {

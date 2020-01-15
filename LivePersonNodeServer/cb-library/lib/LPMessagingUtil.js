@@ -2,7 +2,7 @@
 const request = require('request');
 const OAuth = require('oauth-1.0a')
 const crypto  = require('crypto');
-const AgentConfig = require('../config/AgentConfig');
+const AgentConfig = require('./config/AgentConfig');
 
 const generateOAUTHOption = (options) => {
   // Initialize

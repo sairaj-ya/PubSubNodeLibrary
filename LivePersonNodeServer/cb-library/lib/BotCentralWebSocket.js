@@ -1,6 +1,6 @@
 const io = require('socket.io-client');
 const MessageConverter = require('./MessageConverter')
-const AgentConfig = require('../config/AgentConfig');
+const AgentConfig = require('./config/AgentConfig');
 const CB_keywords = [
   'freset', 'reset', '__agent_escalation_failed__', '__image_received__'
 ]

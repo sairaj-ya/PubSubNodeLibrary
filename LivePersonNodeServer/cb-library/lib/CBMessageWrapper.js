@@ -1,5 +1,5 @@
 const BCAgent = require('./BotCentralWebSocket');
-const ms = require('../BotCentralLib/ConversationDataStore').getConversationDataStore();
+const ms = require('./ConversationDataStore').getConversationDataStore();
 const messagingUtil = require('./LPMessagingUtil');
 const evUtil = require('./eventHelper');
 const leEvents = require('./LiveEngageEvents');

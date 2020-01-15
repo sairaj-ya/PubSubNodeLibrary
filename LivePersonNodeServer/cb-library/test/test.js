@@ -1,9 +1,9 @@
 
-const cbPS = require('./CBPubSubService');
+const cbPS = require('../lib/CBPubSubService');
 
 const pubSub = new cbPS();
 
-pubSub.startCBConnection('dev', (err, isSuc)=>{
+pubSub.startCBConnection('aws-us', (err, isSuc)=>{
     if(err){
         console.log(`error while starting the cb`);
     }else{
@@ -40,13 +40,13 @@ function printFunc(obj, eventType){
     console.log(JSON.stringify(obj));
 }
 
-botId ="febc78c929c877b13d016a102eabf74bf5655e57";
+botId ="1f8dda228209f1263685470396f380aa941ba031";
 agentInfo = {
     accountId : "21692729",
     accountUser : "920631632"
 }
 
-mItem = {"dialogId":"e4bee960-af74-4930-87f7-05550171d783","sequence":1,"message":"nope","event":{"type":"ContentEvent","message":"nope","contentType":"text/plain"},"serverTimestamp":1579022485877,"originatorMetadata":{"id":"e023f9cd6323aaae533bbca9aa2c989de850c90c29c34f8f6a6d7abd7a6917ec","role":"CONSUMER","clientProperties":{"type":".ClientProperties","appId":"webAsync","ipAddress":"73.15.38.19","deviceFamily":"DESKTOP","os":"OSX","osVersion":"10.14.6","integration":"WEB_SDK","integrationVersion":"3.0.32","browser":"CHROME","browserVersion":"79.0.3945.117","features":["PHOTO_SHARING","CO_BROWSE","QUICK_REPLIES","MARKDOWN_HYPERLINKS","AUTO_MESSAGES","MULTI_DIALOG","FILE_SHARING","RICH_CONTENT"]}},"role":"CONSUMER","originatorId":"e023f9cd6323aaae533bbca9aa2c989de850c90c29c34f8f6a6d7abd7a6917ec","originatorClientProperties":{"type":".ClientProperties","appId":"webAsync","ipAddress":"73.15.38.19","deviceFamily":"DESKTOP","os":"OSX","osVersion":"10.14.6","integration":"WEB_SDK","integrationVersion":"3.0.32","browser":"CHROME","browserVersion":"79.0.3945.117","features":["PHOTO_SHARING","CO_BROWSE","QUICK_REPLIES","MARKDOWN_HYPERLINKS","AUTO_MESSAGES","MULTI_DIALOG","FILE_SHARING","RICH_CONTENT"]}};
+mItem = {"dialogId":"e4bee960-af74-4930-87f7-05550171d783","sequence":1,"message":"hi","event":{"type":"ContentEvent","message":"nope","contentType":"text/plain"},"serverTimestamp":1579022485877,"originatorMetadata":{"id":"e023f9cd6323aaae533bbca9aa2c989de850c90c29c34f8f6a6d7abd7a6917ec","role":"CONSUMER","clientProperties":{"type":".ClientProperties","appId":"webAsync","ipAddress":"73.15.38.19","deviceFamily":"DESKTOP","os":"OSX","osVersion":"10.14.6","integration":"WEB_SDK","integrationVersion":"3.0.32","browser":"CHROME","browserVersion":"79.0.3945.117","features":["PHOTO_SHARING","CO_BROWSE","QUICK_REPLIES","MARKDOWN_HYPERLINKS","AUTO_MESSAGES","MULTI_DIALOG","FILE_SHARING","RICH_CONTENT"]}},"role":"CONSUMER","originatorId":"e023f9cd6323aaae533bbca9aa2c989de850c90c29c34f8f6a6d7abd7a6917ec","originatorClientProperties":{"type":".ClientProperties","appId":"webAsync","ipAddress":"73.15.38.19","deviceFamily":"DESKTOP","os":"OSX","osVersion":"10.14.6","integration":"WEB_SDK","integrationVersion":"3.0.32","browser":"CHROME","browserVersion":"79.0.3945.117","features":["PHOTO_SHARING","CO_BROWSE","QUICK_REPLIES","MARKDOWN_HYPERLINKS","AUTO_MESSAGES","MULTI_DIALOG","FILE_SHARING","RICH_CONTENT"]}};
 
 lpUserInfoList = [];
 
