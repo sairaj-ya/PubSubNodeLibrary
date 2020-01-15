@@ -1,3 +1,4 @@
 console.log
 logs/
 node_modules/
+.vscode/
