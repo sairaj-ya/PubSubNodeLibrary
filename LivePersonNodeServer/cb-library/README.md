@@ -72,6 +72,71 @@ pubSub.cbConnectionStatus();
 
 ```
 
+## Set last Sequence for the dialogue
+this api is needed to set the last responded sequence id for the dialogue Id
+```javascript
+
+const convBuilderPubSub = require('./cb-library');
+const pubSub = new convBuilderPubSub();
+
+//inputs
+// dialogue Id,
+//sequence Id,
+//@callback
+var seqId = 1
+pubSub.setLastSequenceForDialogue("e4bee960-af74-4930-87f7-05550171d783", seqId, (err, reply)=>{
+    if(err){
+        console.log(`Error while setting to redis ${err}`);
+    }else{
+        console.log(`reply for the set to redis : ${reply}`);
+    }
+
+});
+
+```
+
+## get last Sequence for the dialogue
+this api is needed to get the last responded sequence id set for the dialogue Id in the redis
+```javascript
+
+const convBuilderPubSub = require('./cb-library');
+const pubSub = new convBuilderPubSub();
+
+//inputs
+// dialogue Id,
+//@callback
+var seqId = 1
+pubSub.getLastSequenceForDialogue("e4bee960-af74-4930-87f7-05550171d783", (err, val)=>{
+    if(err){
+        console.log(`Error while getting from redis: ${err}`);
+    }else{
+        console.log(`last sequence: ${val}`);
+    }
+})
+
+```
+
+## Delete the dialogue from redis
+this api is needed to delete the dialogue Id from the redis
+```javascript
+
+const convBuilderPubSub = require('./cb-library');
+const pubSub = new convBuilderPubSub();
+
+//inputs
+// dialogue Id,
+//@callback
+var seqId = 1
+pubSub.removeDialogueSequenceMapping("e4bee960-af74-4930-87f7-05550171d783", (err, reply)=>{
+    if(err){
+        console.log(`Error while deleting from redis: ${err}`);
+    }else{
+        console.log(`Deleted the mapping for dialogueId: e4bee960-af74-4930-87f7-05550171d783 and reply from the redis is: ${reply}`);
+    }
+})
+
+```
+
 ## subscribe to ConversationBuilder
 call this api to subscribe for the bots responses
 @botMessageEventHandler is the handler function you need to provide to pass as an argument. This method is called when ever there is a bot response.
