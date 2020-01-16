@@ -27,7 +27,7 @@ class BotCentralWebSocket {
 
     initializeSocket(env, cb) {
       let vm = this;
-      let path = AgentConfig['websocket'][env];
+      let path = AgentConfig['path'][env]['websocket'];
       console.log(`[botcentralWebsocket] bot environment : ${env}`);
       console.log('[botcentralWebsocket] Connecting to socket server', path)
       try{
@@ -38,43 +38,43 @@ class BotCentralWebSocket {
             forceNode: true
           });
         socket.on('connect', function(res){
-          console.log('[botcentralWebsocket] botcentral server connect successful', res);
+          console.log(`[botcentralWebsocket] botcentral server connect successful ${res}`);
           vm.status = true;
           vm.setOnBotResponse()
           cb(null, true);
         });
         socket.on('connection', function(res){
-          console.log('[botcentralWebsocket] botcentral server connection successful', res);
+          console.log(`[botcentralWebsocket] botcentral server connection successful ${res}`);
           vm.status = true;
         });
 
         socket.on('closed', data => {
-          console.log('[botcentralWebsocket] botcentral server connection closed', data);
+          console.log(`[botcentralWebsocket] botcentral server connection closed ${data}`);
           vm.status = false;
         });
 
         socket.on('error', (err) => {
-          console.log('[botcentralWebsocket] botcentral server error', err);
+          console.log(`[botcentralWebsocket] botcentral server error ${err}`);
           vm.status = false;
           // vm.api.notifyError('BC_SOCKET', err.stack);
         });
         socket.on('connect_error', (error) => {
-          console.log('[botcentralWebsocket] botcentral server connection error', error);
+          console.log(`[botcentralWebsocket] botcentral server connection error ${error}`);
           vm.status = false;
         });
 
         socket.on('reconnect_attempt', () => {
           socket.io.opts.transports = ['websocket'];
-          console.log('[botcentralWebsocket] botcentral server connection reconnect_attempt');
+          console.log(`[botcentralWebsocket] botcentral server connection reconnect_attempt`);
         });
 
         socket.on('disconnect', (reason) => {
-          console.log('[botcentralWebsocket] botcentral server connection disconnect', reason);
+          console.log(`[botcentralWebsocket] botcentral server connection disconnect ${reason}`);
           vm.status = false;
         });
 
         socket.on('reconnecting', (attemptNumber) => {
-          console.log('[botcentralWebsocket] botcentral server connection reconnecting', attemptNumber);
+          console.log(`[botcentralWebsocket] botcentral server connection reconnecting ${attemptNumber}`);
         });
         return socket;
       }catch(e){
@@ -216,7 +216,6 @@ class BotCentralWebSocket {
         delete this.messageCache[consumerId];
       }
     }
-
 
     setOnMessageCallback(cb) {
       this.onMessage = cb;

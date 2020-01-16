@@ -3,6 +3,7 @@ const ms = require('./ConversationDataStore').getConversationDataStore();
 const messagingUtil = require('./LPMessagingUtil');
 const evUtil = require('./eventHelper');
 const leEvents = require('./LiveEngageEvents');
+const redisClient = require('./RedisQueue');
 
 class CBMessageWrapper{
     constructor() {
@@ -10,6 +11,7 @@ class CBMessageWrapper{
     init(environment, cb) {
         try{
             this.bc = new BCAgent(environment, cb);
+            this.redisHandle = new redisClient(environment);
             //this.botMessageHandler = botMessageEventHandler;
             //this.registerBCCallbacks();
         }catch(e) {
@@ -207,5 +209,18 @@ class CBMessageWrapper{
           }
         }
     }
+    
+    setLastSequenceForDialogue(dialogueId, sequence, cb){
+      this.redisHandle.setToRedis(dialogueId, sequence, cb);
+    }
+
+    getLastSequenceForDialogue(dialogueId, cb){
+      this.redisHandle.getFromRedis(dialogueId, cb);
+    }
+
+    deleteDialogueSequenceMapping(dialogId, cb){
+      this.redisHandle.removeKeyFromRedis(dialogId, cb);
+    }
+
 }
 module.exports = CBMessageWrapper;

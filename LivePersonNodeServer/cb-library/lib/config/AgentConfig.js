@@ -21,19 +21,91 @@ const conf = {
     retryMessageInterval : 30000,
     messageResendMaxRetries : 1
   },
-  websocket:{
-    "aws-us" : "wss://chat.botcentralapi.com",
-    "aws-eu" : "ws://chat-i.eubotintra.com",
-    "aws-ap" : "wss://chat-ap.botcentralapi.com",
-    "dev" : "wss://dev.msg.botcentralapi.com",
-    "local" : "ws://localhost:9092/socket.io",
-    "alpha" : "wss://botbuilder2-chat.botcentralapi.com",
-    "lp-alpha" : "wss://va-a.bc-msg.liveperson.net",
-    "us-staging" : "wss://staging.msg.botcentralapi.com",
-    "lp-qa" : "wss://msg-dev.dev.lprnd.net",
-    "lp-us-va" : "wss://va.bc-msg.liveperson.net",
-    "lp-lo-eu" : "wss://lo.bc-msg.liveperson.net",
-    "lp-ap-sy" : "wss://sy.bc-msg.liveperson.net"
+  path : {
+    "aws-us" : {
+      "websocket" : "wss://chat.botcentralapi.com",
+      "redis": {
+        "host" : "prod2redis.qnqxx8.ng.0001.usw1.cache.amazonaws.com",
+        "port" : "6379"
+      }
+    },
+    "aws-eu" : {
+      "websocket" : "ws://chat-i.eubotintra.com",
+      "redis": {
+        "host" : "eu-prod-redis.bpw09s.ng.0001.euw2.cache.amazonaws.com",
+        "port" : "6379"
+      }
+    },
+    "aws-ap" : {
+      "websocket" : "wss://chat-ap.botcentralapi.com",
+      "redis": {
+        "host" : "ap-prod-redis.bsczzu.ng.0001.apse2.cache.amazonaws.com",
+        "port" : "6379"
+      }
+    },
+    "dev" : {
+      "websocket" : "wss://dev.msg.botcentralapi.com",
+      "redis": {
+        "host" : "localhost",
+        "port" : "6379"
+      }
+    },
+    "local" : {
+      "websocket" : "ws://localhost:9092/socket.io",
+      "redis": {
+        "host" : "localhost",
+        "port" : "6379"
+      }
+    },
+    "alpha" : {
+      "websocket" : "wss://botbuilder2-chat.botcentralapi.com",
+      "redis": {
+        "host" : "redis-prod.5o3coz.ng.0001.usw2.cache.amazonaws.com",
+        "port" : "6379"
+      }
+    },
+    "lp-alpha" : {
+      "websocket" : "wss://va-a.bc-msg.liveperson.net",
+      "redis": {
+        "host" : "avor-dbb102",
+        "port" : "6379"
+      }
+    },
+    "us-staging" : {
+      "websocket" : "wss://staging.msg.botcentralapi.com",
+      "redis": {
+        "host" : "redisstaging.5o3coz.ng.0001.usw2.cache.amazonaws.com",
+        "port" : "6379"
+      }
+    },
+    "lp-qa" : {
+      "websocket" : "wss://msg-dev.dev.lprnd.net",
+      "redis": {
+        "host" : "qtor-bot10",
+        "port" : "6379"
+      }
+    },
+    "lp-us-va" : {
+      "websocket" : "wss://va.bc-msg.liveperson.net",
+      "redis": {
+        "host" : "svor-dbb103",
+        "port" : "6379"
+      }
+    },
+    "lp-lo-eu" : {
+      "websocket" : "wss://lo.bc-msg.liveperson.net",
+      "redis": {
+        "host" : "slor-abb126",
+        "port" : "6379"
+      }
+    },
+    "lp-ap-sy" : {
+      "websocket" : "wss://sy.bc-msg.liveperson.net",
+      "redis": {
+        "host" : "ssor-dbb115",
+        "port" : "6379"
+      }
+    }
   }
 };
 

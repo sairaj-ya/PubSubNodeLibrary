@@ -5,6 +5,31 @@ class CBPubSubService {
     constructor() {
     }
 
+    setLastSequenceForDialogue(dialogueId, sequence, cb){
+        try{
+            convBuilder.setLastSequenceForDialogue(dialogueId, sequence, cb);
+        }catch(e){
+            console.log(`[Error][Setting the Sequence: ${sequence} for][DialogueId: ${dialogueId}] ${e}`);
+            cb(e, false);
+        }
+    }
+    getLastSequenceForDialogue(dialogueId, cb){
+        try{
+            convBuilder.getLastSequenceForDialogue(dialogueId, cb);
+        }catch(e){
+            console.log(`[Error][Getting the Sequence for DialogueId: ${dialogueId}]`);
+            cb(e, false);
+        }
+    }
+    removeDialogueSequenceMapping(dialogueId, cb){
+        try{
+            convBuilder.deleteDialogueSequenceMapping(dialogueId, cb);
+        }catch(e){
+            console.log(`[Error][Deleting the Sequence for DialogueId: ${dialogueId}]`);
+            cb(e, false);
+        }
+    }
+
     publishToConversationBuilder(messageItem, botId, agentInfo, cb) {
         //implementation of publish to CB.
         try {

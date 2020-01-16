@@ -32,11 +32,26 @@ pubSub.startCBConnection('dev', (err, isSuc)=>{
         });
     }
 });
-
+var i=0;
 function printFunc(obj, eventType){
     console.log(`Bot response`);
     console.log(eventType);
     console.log(JSON.stringify(obj));
+    
+    pubSub.getLastSequenceForDialogue("e4bee960-af74-4930-87f7-05550171d783", (err, val)=>{
+        if(err){
+            console.log(`Error while getting from redis: ${err}`);
+        }else{
+            console.log(`last sequence: ${val}`);
+        }
+    })
+    
+    pubSub.setLastSequenceForDialogue("e4bee960-af74-4930-87f7-05550171d783", i, (err, isSuccess)=>{
+        if(err){
+            console.log(`Error while setting to redis ${err}`);
+        }
+    });
+    i++;
 }
 
 botId ="289e08a08779cc682f70e4e88adab332f1dda2d4";
