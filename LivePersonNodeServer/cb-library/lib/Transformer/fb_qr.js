@@ -21,6 +21,9 @@ const getFacebookQuickReply = (message) => {
           ]
         }
       }
+      if(item.answermetadata)
+        obj.metadata = item.answermetadata;
+
       // payload for Facebook Context
       let p = item.payload.split('<messageName>');
       obj.click =  {
@@ -33,6 +36,8 @@ const getFacebookQuickReply = (message) => {
     })
     retObj['quickReply'] = qrObj;
   }
+  if(message.questionmetadata)
+    retObj.metadata= message.questionmetadata;
 
   return retObj;
 }

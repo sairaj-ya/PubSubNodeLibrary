@@ -12,6 +12,8 @@ const createButton = (b) => {
     tooltip: b.title,
     click: {}
   }
+  if(b.answermetadata)
+    btn.metadata = b.answermetadata;
   if (b.type === 'postback') {
     let p = b.payload.split('<messageName>')
     btn.click =  {

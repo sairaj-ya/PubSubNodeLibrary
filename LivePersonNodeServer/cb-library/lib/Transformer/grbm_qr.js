@@ -28,10 +28,15 @@ const getGRBMQuickReply = (message) => {
           ]
         }
       }
+      if(item.answermetadata)
+        obj.metadata = item.answermetadata;
+
       qrObj['replies'].push(obj);
     })
     retObj['quickReply'] = qrObj;
   }
+  if(message.questionmetadata)
+    retObj.metadata= message.questionmetadata;
 
   return retObj;
 }

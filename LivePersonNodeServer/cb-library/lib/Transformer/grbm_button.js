@@ -11,6 +11,9 @@ const getGRBMButton = (payload, display) => {
     'tag' : 'generic',
     'elements' : []
   }
+  if(payload.questionmetadata)
+    retObj.metadata= payload.questionmetadata;
+    
   let element_arr = [];
   if(payload['text'] && payload['text'] != '[none]') {
     let title_obj = createTitle({'title' : payload['text']});

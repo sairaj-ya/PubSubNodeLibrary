@@ -21,11 +21,15 @@ const getFacebookButton = (message) => {
       button_array[0].elements.push(createButton(b));
     });
   }
-  return {
+  
+  let retObj = {
     type: "vertical",
     tag: "button",
     elements: button_array
   };
+  if(msgPayload.questionmetadata)
+    retObj.metadata= msgPayload.questionmetadata;
+  return retObj;
 }
 
 module.exports = {

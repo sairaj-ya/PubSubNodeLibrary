@@ -20,11 +20,15 @@ const getButton = (message, userType) => {
       button_array.push(createButton(b));
     });
   }
-  return {
+
+  let retObj = {
     type: "vertical",
     tag: "button",
     elements: button_array
   };
+  if(msgPayload.questionmetadata)
+    retObj.metadata= msgPayload.questionmetadata;
+  return retObj;
 }
 
 module.exports = {
