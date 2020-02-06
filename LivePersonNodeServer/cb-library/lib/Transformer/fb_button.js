@@ -27,8 +27,8 @@ const getFacebookButton = (message) => {
     tag: "button",
     elements: button_array
   };
-  if(msgPayload.questionmetadata)
-    retObj.metadata= msgPayload.questionmetadata;
+  if(msgPayload.metadata)
+    retObj.metadata= msgPayload.metadata;
   return retObj;
 }
 

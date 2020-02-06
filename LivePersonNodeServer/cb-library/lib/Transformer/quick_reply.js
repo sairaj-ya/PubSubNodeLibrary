@@ -22,8 +22,8 @@ const getQuickReply = (message, userType) => {
         }
       }
       
-      if(item.answermetadata)
-        obj.metadata = item.answermetadata;
+      if(item.metadata)
+        obj.metadata = item.metadata;
 
       if(userType === 'FacebookContext') {
         // payload for Facebook Context
@@ -40,8 +40,10 @@ const getQuickReply = (message, userType) => {
     retObj['quickReply'] = qrObj;
   }
   
-  if(message.questionmetadata)
-    retObj.metadata= message.questionmetadata;
+  if(message.metadata){
+    if(retObj.quickReply)
+      retObj.quickReply.metadata= message.metadata;
+  }
 
   return retObj;
 }

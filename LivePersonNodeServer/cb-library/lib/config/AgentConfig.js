@@ -51,7 +51,7 @@ const conf = {
       }
     },
     "local" : {
-      "websocket" : "ws://localhost:9092/socket.io",
+      "websocket" : "wss://chat.botcentralapi.com",
       "redis": {
         "host" : "localhost",
         "port" : "6379"

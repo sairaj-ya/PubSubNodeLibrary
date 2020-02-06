@@ -11,8 +11,8 @@ const getGRBMButton = (payload, display) => {
     'tag' : 'generic',
     'elements' : []
   }
-  if(payload.questionmetadata)
-    retObj.metadata= payload.questionmetadata;
+  if(payload.metadata)
+    retObj.metadata= payload.metadata;
     
   let element_arr = [];
   if(payload['text'] && payload['text'] != '[none]') {

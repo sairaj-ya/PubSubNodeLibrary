@@ -54,7 +54,13 @@ const getApplePayEvent = (dialogId, content) => {
 }
 
 const getQuickReplyEvent = (dialogId, message, quickReplies) => {
-  return {
+  let meta = null;
+  if(quickReplies.metadata){
+    meta = quickReplies.metadata;
+    delete quickReplies.metadata;
+  }
+
+  let retObj = {
     dialogId: dialogId,
     event: {
       type: 'ContentEvent',
@@ -63,6 +69,11 @@ const getQuickReplyEvent = (dialogId, message, quickReplies) => {
       quickReplies : quickReplies
     }
   }
+
+  if(meta)
+    retObj.metadata = meta;
+
+  return retObj;
 }
 
 const getTypingEvent = (dialogId, state) => {
